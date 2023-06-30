@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>To-Do</title>
+  <style>
+    * {
+      padding: 0;
+      margin: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      background-color: black;
+      background-image: url('./1.jpg');
+      background-size: cover;
+      background-position-y: -50%;
+    }
+
+    .row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .box {
+      color: white;
+      padding: 100px 50px;
+      border: 2px solid #fff;
+      border-radius: 12px;
+    }
+
+    th,
+    td {
+      padding: 10px;
+    }
+
+    input[type=button] {
+      padding: 8px 16px;
+      background: transparent;
+      color: white;
+      font-weight: 500;
+      border: 1px solid white;
+      border-radius: 4px;
+    }
+
+    button {
+      padding: 4px 8px;
+      color: rgb(0, 0, 0);
+      border: 1px solid white;
+      border-radius: 4px;
+    }
+
+    input[type=text] {
+      padding: 8px;
+      background-color: transparent;
+      border: none;
+      border-bottom: 1px solid white;
+      color: white;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 35px;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+
+    .line {
+      margin: 10px 0 30px;
+    }
+
+    .text {
+      font-size: 18px;
+    }
+
+    .heading {
+      font-size: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <section>
+    <div class="container">
+      <div class="row">
+        <div class="box">
+          <h1>To Do List</h1>
+          <hr class="line">
+          <table>
+            <input type="hidden" id="editid" />
+            <tr>
+              <td class="text">Name</td>
+              <td><input type="text" id="name" /></td>
+            </tr>
+            <tr>
+              <td class="text">Task</td>
+              <td><input type="text" id="task" /></td>
+            </tr>
+            <tr>
+              <td></td>
+              <td>
+                <input type="button" onclick="save()" id="addbtn" value="Assign" />
+                <input type="button" onclick="save()" id="editbtn" value="Edit" />
+              </td>
+            </tr>
+          </table><br /><br />
+
+          <table border="1">
+            <thead>
+              <tr>
+                <th class="heading">Name</th>
+                <th class="heading">Task</th>
+                <th class="heading">Action</th>
+              </tr>
+            </thead>
+            <tbody id="record"></tbody>
+          </table>
+          <br>
+          <input type="button" onclick="clr()" id="clrbtn" value="Clear All" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script type="text/javascript">
+    let data = [];
+
+    const viewdata = () => {
+      document.getElementById('editbtn').style.display = "none";
+      document.getElementById('addbtn').style.display = "block";
+
+      let val = JSON.parse(localStorage.getItem('user'));
+      let record = (val == null) ? [] : val;
+      let tbl = "";
+      record.map((v) => {
+        const { userid, name, task } = v;
+        tbl += `
+                    <tr>
+                        <td>${name}</td>        
+                        <td>${task}</td> 
+                        <td><button onclick="del(${userid})">Delete</button>
+                            <button onclick="edit(${userid})">Edit</button>
+                        </td>      
+                    </tr>
+                `
+      });
+      document.getElementById('record').innerHTML = tbl;
+    }
+    viewdata();
+
+    const save = () => {
+      let userid = document.getElementById('editid').value;
+      let name = document.getElementById('name').value;
+      let task = document.getElementById('task').value;
+
+      let obj = {
+        userid: Math.floor(Math.random() * 10000),
+        name: name,
+        task: task
+      }
+
+      if (userid) {
+        let val = JSON.parse(localStorage.getItem('user'));
+        for (let i in val) {
+          if (val[i].userid == userid) {
+            val[i].name = name;
+            val[i].task = task;
+          }
+        }
+
+        localStorage.setItem('user', JSON.stringify(val));
+        document.getElementById('editid').value = "";
+        viewdata();
+      } else {
+
+        if (localStorage.getItem('user') === null || localStorage.getItem('user') === undefined) {
+          data.push(obj);
+          localStorage.setItem('user', JSON.stringify(data));
+        } else {
+          let val = JSON.parse(localStorage.getItem('user'));
+          val.push(obj);
+          localStorage.setItem('user', JSON.stringify(val));
+        }
+        viewdata();
+      }
+
+      document.getElementById('name').value = "";
+      document.getElementById('task').value = "";
+    }
+
+    const del = (id) => {
+      let alldata = JSON.parse(localStorage.getItem('user'));
+      let ans = alldata.filter((val) => {
+        return val.userid != id;
+      })
+      localStorage.setItem('user', JSON.stringify(ans));
+      viewdata();
+    }
+
+    const edit = (id) => {
+      document.getElementById('editbtn').style.display = "block";
+      document.getElementById('addbtn').style.display = "none";
+      let alldata = JSON.parse(localStorage.getItem('user'));
+
+      let ans = alldata.filter((val) => {
+        return val.userid == id;
+      })
+
+      document.getElementById('name').value = ans[0].name;
+      document.getElementById('task').value = ans[0].task;
+      document.getElementById('editid').value = ans[0].userid;
+    }
+
+    const clr = () => {
+      localStorage.removeItem('user');
+      viewdata();
+    }
+  </script>
+</body>
+
+</html>
